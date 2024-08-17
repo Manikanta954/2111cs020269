@@ -1,28 +1,46 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { fetchProducts } from '../api';
-import ProductDetails from '../components/ProductDetails';
+import { useParams } from 'react-router-dom';
 
 const ProductPage = () => {
   const { companyId, categoryId, productId } = useParams();
   const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getProduct = async () => {
+    const fetchProduct = async () => {
       try {
-        const data = await fetchProducts(companyId, categoryId, 0, 10000, 1);
-        const foundProduct = data.find((p) => p.productId === productId);
+        const productList = await fetchProducts();
+        console.log('Fetched products:', productList); // Log data to check
+        const foundProduct = productList.find(p => p.productId === productId);
         setProduct(foundProduct);
+        setLoading(false);
       } catch (error) {
-        console.error('Failed to fetch product:', error);
+        setError('Failed to fetch product details.');
+        setLoading(false);
       }
     };
-    getProduct();
+
+    fetchProduct();
   }, [companyId, categoryId, productId]);
 
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <div className="product-page">
-      {product ? <ProductDetails product={product} /> : <p>Loading...</p>}
+    <div>
+      {product ? (
+        <div>
+          <h1>{product.productName}</h1>
+          <p>Price: ${product.price}</p>
+          <p>Rating: {product.rating}</p>
+          <p>Discount: {product.discount}%</p>
+          <p>Availability: {product.availability}</p>
+        </div>
+      ) : (
+        <p>Product not found</p>
+      )}
     </div>
   );
 };

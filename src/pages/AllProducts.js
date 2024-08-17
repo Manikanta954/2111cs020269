@@ -1,43 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { fetchProducts } from '../api';
-import ProductCard from '../components/ProductCard';
 
 const AllProducts = () => {
   const [products, setProducts] = useState([]);
-  const [filters, setFilters] = useState({
-    company: 'AZD',
-    category: 'Laptop',
-    minPrice: 0,
-    maxPrice: 10000,
-    n: 10,
-  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const getProducts = async () => {
+    const fetchProductData = async () => {
       try {
-        const data = await fetchProducts(
-          filters.company,
-          filters.category,
-          filters.minPrice,
-          filters.maxPrice,
-          filters.n
-        );
-        setProducts(data);
+        const productList = await fetchProducts();
+        console.log('Fetched products:', productList); // Log data to check
+        setProducts(productList);
+        setLoading(false);
       } catch (error) {
-        console.error('Failed to fetch products:', error);
+        setError('Failed to fetch products.');
+        setLoading(false);
       }
     };
-    getProducts();
-  }, [filters]);
+
+    fetchProductData();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div className="all-products">
+    <div>
       <h1>All Products</h1>
-      <div className="product-list">
-        {products.map((product, index) => (
-          <ProductCard key={index} product={product} />
-        ))}
-      </div>
+      {products.length > 0 ? (
+        <ul>
+          {products.map((product, index) => (
+            <li key={index}>
+              <a href={`/product/AMZ/Laptop/${product.productId}`}>
+                {product.productName} - ${product.price}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No products available</p>
+      )}
     </div>
   );
 };
